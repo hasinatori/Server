@@ -1,0 +1,24 @@
+# Systemd Service für Autostart
+# Speichern unter: /etc/systemd/system/flask-server.service
+# Enablen: sudo systemctl enable flask-server.service
+# Start: sudo systemctl start flask-server.service
+# Status: sudo systemctl status flask-server.service
+
+[Unit]
+Description=Flask Server Application
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+WorkingDirectory=/var/www/server
+Environment="PATH=/var/www/server/venv/bin"
+ExecStart=/var/www/server/venv/bin/gunicorn -w 4 -b 127.0.0.1:5000 --timeout 30 Server:app
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+KillSignal=SIGQUIT
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

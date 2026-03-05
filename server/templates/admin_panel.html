@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
+        .navbar { background: #667eea; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .navbar h1 { font-size: 24px; }
+        .navbar a { color: white; text-decoration: none; padding: 8px 15px; background: rgba(255,255,255,0.2); border-radius: 5px; transition: background 0.3s; }
+        .navbar a:hover { background: rgba(255,255,255,0.3); }
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+        .panel { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { color: #667eea; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; color: #333; margin-bottom: 8px; font-weight: 500; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-family: inherit; font-size: 14px; }
+        textarea { resize: vertical; min-height: 200px; }
+        input:focus, textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgba(102,126,234,0.1); }
+        .button-group { display: flex; gap: 10px; margin-top: 20px; }
+        button { padding: 12px 25px; border: none; border-radius: 5px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-save { background: #10b981; color: white; }
+        .btn-save:hover { background: #059669; }
+        .btn-cancel { background: #999; color: white; }
+        .btn-cancel:hover { background: #777; }
+        .message { padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .message.success { background: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
+        .message.error { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
+        .loading { display: none; color: #667eea; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>⚙️ Admin Panel</h1>
+        <div>
+            <span>Angemeldet als: <strong>{{ session.admin_username }}</strong></span> |
+            <a href="/admin/logout">Abmelden</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <h2>Seiteninhalte bearbeiten</h2>
+            
+            <div id="message"></div>
+            
+            <form id="editForm">
+                <div class="form-group">
+                    <label for="title">Seiten-Titel:</label>
+                    <input type="text" id="title" name="title" value="{{ content.title }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="content">Seiten-Inhalt:</label>
+                    <textarea id="content" name="content" required>{{ content.content }}</textarea>
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn-save">💾 Speichern</button>
+                    <a href="/" style="text-decoration: none;"><button type="button" class="btn-cancel">🔙 Zur Startseite</button></a>
+                </div>
+                <div class="loading" id="loading">Wird gespeichert...</div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            const messageDiv = document.getElementById('message');
+            const loading = document.getElementById('loading');
+            
+            loading.style.display = 'block';
+            messageDiv.innerHTML = '';
+            
+            try {
+                const response = await fetch('/admin/api/update-content', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, content })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    messageDiv.innerHTML = '<div class="message success">✓ Inhalte erfolgreich gespeichert!</div>';
+                    setTimeout(() => { messageDiv.innerHTML = ''; }, 3000);
+                } else {
+                    messageDiv.innerHTML = `<div class="message error">✗ Fehler: ${data.message}</div>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="message error">✗ Fehler beim Speichern</div>';
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
